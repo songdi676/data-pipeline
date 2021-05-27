@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: data-pipeline
+pipeline:
+  image: ${CONNECT_IMAGE:harbor.paas.nl:5000/paas_platform/debezium/connect:1.4.2.Final}
+  namespace: ${CONNECT_NAME_SPACES:manage}
