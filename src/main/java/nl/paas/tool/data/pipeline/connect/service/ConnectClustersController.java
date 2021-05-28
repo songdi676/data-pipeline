@@ -20,7 +20,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import nl.paas.tool.data.pipeline.connect.api.IConnectClustersController;
-import nl.paas.tool.data.pipeline.connect.api.config.PipelineConfig;
+import nl.paas.tool.data.pipeline.config.PipelineConfig;
 import nl.paas.tool.data.pipeline.connect.model.ConnectClusterConfig;
 import nl.paas.tool.data.pipeline.connect.model.ConnectConfigEnvKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,8 @@ public class ConnectClustersController implements IConnectClustersController {
     public List<Deployment> getClusters() {
         DeploymentList list;
         try (final KubernetesClient client = new DefaultKubernetesClient()) {
-            list = client.apps().deployments().inAnyNamespace().withLabel(PAAS_DATA_PIPELINE_CLUSTER_NAME).list();
+            list = client.apps().deployments().inNamespace(pipelineConfig.getNamespace())
+                .withLabel(PAAS_DATA_PIPELINE_CLUSTER_NAME).list();
         }
         return list.getItems();
     }
@@ -58,7 +59,7 @@ public class ConnectClustersController implements IConnectClustersController {
         Collection<Volume> volumes = new HashSet<>();
         Volume localtimeVolume = new Volume();
         localtimeVolume.setName("localtime");
-        HostPathVolumeSource hostPathVolumeSource=new HostPathVolumeSource();
+        HostPathVolumeSource hostPathVolumeSource = new HostPathVolumeSource();
         hostPathVolumeSource.setPath("/etc/localtime");
         localtimeVolume.setHostPath(hostPathVolumeSource);
         volumes.add(localtimeVolume);
@@ -73,17 +74,12 @@ public class ConnectClustersController implements IConnectClustersController {
                 .withNewSpec().withReplicas(connectClusterConfig.getReplicas()).withNewTemplate().withNewMetadata()
                 .addToLabels("app", "data-pipeline-connect")
                 .addToLabels(PAAS_DATA_PIPELINE_CLUSTER_NAME, connectClusterConfig.getGroupId())
-                .addToAnnotations("connect.prometheus.io/port",PORT_8080+"")
-                .addToAnnotations("connect.prometheus.io/scrape","true").endMetadata()
-                .withNewSpec().addNewContainer()
-                .withName("connect")
-                .withImage(pipelineConfig.getImage())
-                .withVolumeMounts(localtimeVolumeMount)
+                .addToAnnotations("connect.prometheus.io/port", PORT_8080 + "")
+                .addToAnnotations("connect.prometheus.io/scrape", "true").endMetadata().withNewSpec().addNewContainer()
+                .withName("connect").withImage(pipelineConfig.getImage()).withVolumeMounts(localtimeVolumeMount)
                 .withImagePullPolicy("Always").withEnv(convertToEnvVarList(connectClusterConfig)).addNewPort()
                 .withContainerPort(PORT_8083).withContainerPort(PORT_1976).withContainerPort(PORT_8080).endPort()
-                .endContainer()
-                .addAllToVolumes(volumes)
-                .endSpec().endTemplate().withNewSelector()
+                .endContainer().addAllToVolumes(volumes).endSpec().endTemplate().withNewSelector()
                 .addToMatchLabels(PAAS_DATA_PIPELINE_CLUSTER_NAME, connectClusterConfig.getGroupId()).endSelector()
                 .endSpec().build();
         Service service =
@@ -91,24 +87,11 @@ public class ConnectClustersController implements IConnectClustersController {
             new ServiceBuilder().withNewMetadata().withName(connectClusterConfig.getServiceName()).endMetadata()
                 .withNewSpec().withSelector(
                 Collections.singletonMap(PAAS_DATA_PIPELINE_CLUSTER_NAME, connectClusterConfig.getGroupId()))
-                .addNewPort()
-                .withName("port")
-                .withProtocol("TCP")
-                .withPort(PORT_8083)
-                .withTargetPort(new IntOrString(PORT_8083)).endPort()
-                .addNewPort()
-                .withName("port-2")
-                .withProtocol("TCP")
-                .withPort(PORT_8080)
-                .withTargetPort(new IntOrString(PORT_8080))
-                .endPort()
-                .addNewPort()
-                .withName("port-3")
-                .withProtocol("TCP")
-                .withPort(PORT_1976)
-                .withTargetPort(new IntOrString(PORT_1976))
-                .endPort()
-                .endSpec().build();
+                .addNewPort().withName("port").withProtocol("TCP").withPort(PORT_8083)
+                .withTargetPort(new IntOrString(PORT_8083)).endPort().addNewPort().withName("port-2")
+                .withProtocol("TCP").withPort(PORT_8080).withTargetPort(new IntOrString(PORT_8080)).endPort()
+                .addNewPort().withName("port-3").withProtocol("TCP").withPort(PORT_1976)
+                .withTargetPort(new IntOrString(PORT_1976)).endPort().endSpec().build();
         try (final KubernetesClient client = new DefaultKubernetesClient()) {
             client.services().inNamespace(pipelineConfig.getNamespace()).create(service);
             client.apps().deployments().inNamespace(pipelineConfig.getNamespace()).createOrReplace(deployment);

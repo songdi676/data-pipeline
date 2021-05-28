@@ -52,22 +52,22 @@ spec:
     port: 8080
     protocol: TCP
     targetPort: 8080
-    nodePort: 32110
+    nodePort: 32310
   - name: cp-kafka-rest-http
     port: 8082
     protocol: TCP
     targetPort: 8082
-    nodePort: 32211
+    nodePort: 32311
   - name: burrow-http
     port: 8000
     protocol: TCP
     targetPort: 8000
-    nodePort: 32212
+    nodePort: 32312
   - name: kafdrop-http
     port: 9000
     protocol: TCP
     targetPort: 9000
-    nodePort: 32213
+    nodePort: 32313
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

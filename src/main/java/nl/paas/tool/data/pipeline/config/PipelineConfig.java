@@ -1,4 +1,4 @@
-package nl.paas.tool.data.pipeline.connect.api.config;
+package nl.paas.tool.data.pipeline.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +11,8 @@ public class PipelineConfig {
     private String image;
 
     private String namespace;
+
+    private String configMapName;
 
     public String getImage() {
         return image;
@@ -26,5 +28,13 @@ public class PipelineConfig {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getConfigMapName() {
+        return configMapName;
+    }
+
+    public void setConfigMapName(String configMapName) {
+        this.configMapName = configMapName;
     }
 }
