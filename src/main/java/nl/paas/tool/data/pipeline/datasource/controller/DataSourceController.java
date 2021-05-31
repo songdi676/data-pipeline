@@ -3,6 +3,7 @@ package nl.paas.tool.data.pipeline.datasource.controller;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 
@@ -47,10 +48,10 @@ public class DataSourceController implements IDataSourceController {
             Resource<ConfigMap> configMapResource = client.configMaps().inNamespace(pipelineConfig.getNamespace())
                 .withName(pipelineConfig.getConfigMapName());
             List<DataSourceVo> oldList = getDatasource();
-            DataSourceVo exist =
-                oldList.stream().filter(d -> d.getName().equals(dataSourceVo.getName())).findAny().get();
-            if (exist != null) {
-                exist = dataSourceVo;
+            Optional<DataSourceVo> exist =
+                oldList.stream().filter(d -> d.getName().equals(dataSourceVo.getName())).findAny();
+            if (!exist.isPresent()) {
+                //exist = dataSourceVo;
             } else {
                 oldList.add(dataSourceVo);
             }
