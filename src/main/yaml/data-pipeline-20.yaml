@@ -69,13 +69,16 @@ spec:
     targetPort: 9000
     nodePort: 32313
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: data-pipeline
   namespace: manage
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: data-pipeline
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -90,7 +93,7 @@ spec:
       serviceAccountName: paas-data-pipeline
       containers:
       - name: data-pipeline
-        image: harbor.paas.nl:5000/paas_platform/nl.paas.data-pipeline:2.3
+        image: 10.1.8.15:5000/paas_platform/nl.paas.data-pipeline:2.3
         imagePullPolicy: Always
         env:
         - name: PF_NODE_IP
