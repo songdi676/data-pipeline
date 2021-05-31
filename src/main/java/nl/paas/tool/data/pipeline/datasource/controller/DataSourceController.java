@@ -1,29 +1,22 @@
 package nl.paas.tool.data.pipeline.datasource.controller;
 
-import java.sql.Driver;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.generator.config.DataSourceConfig;
-import com.baomidou.mybatisplus.generator.config.converts.MySqlTypeConvert;
-import com.baomidou.mybatisplus.generator.config.querys.MySqlQuery;
-import com.baomidou.mybatisplus.generator.keywords.MySqlKeyWordsHandler;
+import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import nl.paas.tool.data.pipeline.config.PipelineConfig;
 import nl.paas.tool.data.pipeline.datasource.api.IDataSourceController;
+import nl.paas.tool.data.pipeline.datasource.engines.PostgreSqlEngine;
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import nl.paas.tool.data.pipeline.utils.JsonUtils;
-import nonapi.io.github.classgraph.json.JSONUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -85,5 +78,31 @@ public class DataSourceController implements IDataSourceController {
                 build());
         }
         return name;
+    }
+
+    public DataSourceVo getDataSource(String name) {
+        DataSourceVo exist;
+        try (final KubernetesClient client = new DefaultKubernetesClient()) {
+            Resource<ConfigMap> configMapResource = client.configMaps().inNamespace(pipelineConfig.getNamespace())
+                .withName(pipelineConfig.getConfigMapName());
+            List<DataSourceVo> oldList = getDatasource();
+            exist = oldList.stream().filter(d -> d.getName().equals(name)).findAny().get();
+
+        }
+        return exist;
+    }
+
+    @Override
+    public List<TableInfo> getTableInfoList(String name) {
+        DataSourceVo dataSourceVo = getDataSource(name);
+        PostgreSqlEngine postgreSqlEngine = new PostgreSqlEngine(dataSourceVo);
+        return postgreSqlEngine.getTableInfoList();
+    }
+
+    @Override
+    public List<ReplicationSlot> fetchAllReplicationSlotInfo(String name) throws SQLException {
+        DataSourceVo dataSourceVo = getDataSource(name);
+        PostgreSqlEngine postgreSqlEngine = new PostgreSqlEngine(dataSourceVo);
+        return postgreSqlEngine.fetchAllReplicationSlotInfo();
     }
 }

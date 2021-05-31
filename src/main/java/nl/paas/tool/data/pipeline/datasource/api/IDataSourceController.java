@@ -1,12 +1,12 @@
 package nl.paas.tool.data.pipeline.datasource.api;
 
+import java.sql.SQLException;
 import java.util.List;
 
-import com.baomidou.mybatisplus.generator.config.DataSourceConfig;
+import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import nl.paas.tool.data.pipeline.connect.model.ConnectClusterConfig;
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +44,12 @@ public interface IDataSourceController {
      * @return
      */
     @DeleteMapping(value = "{name}")
-    Object deleteDataSource(@PathVariable("dataSourceId") String name);
+    Object deleteDataSource(@PathVariable("name") String name);
+
+    @GetMapping(value = "{name}/table/list")
+    List<TableInfo> getTableInfoList(@PathVariable("name") String name);
+
+    @GetMapping(value = "{name}/slot/list")
+    List<ReplicationSlot> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;
 
 }
