@@ -50,7 +50,7 @@ public class DataSourceController implements IDataSourceController {
             List<DataSourceVo> oldList = getDatasource();
             Optional<DataSourceVo> exist =
                 oldList.stream().filter(d -> d.getName().equals(dataSourceVo.getName())).findAny();
-            if (!exist.isPresent()) {
+            if (exist.isPresent()) {
                 //exist = dataSourceVo;
             } else {
                 oldList.add(dataSourceVo);
