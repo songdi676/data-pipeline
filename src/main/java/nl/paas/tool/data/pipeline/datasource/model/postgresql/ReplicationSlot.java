@@ -8,6 +8,7 @@ public class ReplicationSlot {
     private boolean active;
     private Lsn latestFlushedLsn;
     private Lsn restartLsn;
+    private Lsn currentWalLsn;
     private Long catalogXmin;
 
     public ReplicationSlot(boolean active, Lsn latestFlushedLsn, Lsn restartLsn, Long catalogXmin) {
@@ -60,6 +61,14 @@ public class ReplicationSlot {
 
     protected SlotState asSlotState() {
         return new SlotState(latestFlushedLsn, restartLsn, catalogXmin, active);
+    }
+
+    public Lsn getCurrentWalLsn() {
+        return currentWalLsn;
+    }
+
+    public void setCurrentWalLsn(Lsn currentWalLsn) {
+        this.currentWalLsn = currentWalLsn;
     }
 
     public String getSlotType() {

@@ -120,18 +120,20 @@ public class DataSourceController implements IDataSourceController {
     @Override
     @DS("#name")
     public List<ReplicationSlot> fetchAllReplicationSlotInfo(String name) {
-        List<ReplicationSlot> ss = jdbcTemplate.query("select * from pg_replication_slots", (rs, var2) -> {
+        List<ReplicationSlot> ss = jdbcTemplate.query("select *,A.current_wal_lsn from pg_replication_slots,pg_current_wal_lsn() AS A(current_wal_lsn)", (rs, var2) -> {
 
             boolean active = rs.getBoolean("active");
             String slotName = rs.getString("slot_name");
             String slotType = rs.getString("slot_type");
             String pluginName = rs.getString("plugin");
             final Long xmin = rs.getLong("catalog_xmin");
+            Lsn currentWalLsn = tryParseLsn(slotName, pluginName, name, rs, "current_wal_lsn");
             Lsn restartLsn = tryParseLsn(slotName, pluginName, name, rs, "restart_lsn");
             Lsn confirmedFlushedLsn = tryParseLsn(slotName, pluginName, name, rs, "confirmed_flush_lsn");
             ReplicationSlot replicationSlot = new ReplicationSlot(active, confirmedFlushedLsn, restartLsn, xmin);
             replicationSlot.setSlotName(slotName);
             replicationSlot.setSlotType(slotType);
+            replicationSlot.setCurrentWalLsn(currentWalLsn);
             return replicationSlot;
 
         });
