@@ -14,7 +14,6 @@ import org.postgresql.replication.LogSequenceNumber;
  * {@link LogSequenceNumber}.
  *
  * @author Jiri Pechanec
- *
  */
 public class Lsn implements Comparable<Lsn> {
 
@@ -32,8 +31,7 @@ public class Lsn implements Comparable<Lsn> {
     }
 
     /**
-     * @param value
-     *            numeric represent position in the write-ahead log stream
+     * @param value numeric represent position in the write-ahead log stream
      * @return not null LSN instance
      */
     public static Lsn valueOf(Long value) {
@@ -47,8 +45,7 @@ public class Lsn implements Comparable<Lsn> {
     }
 
     /**
-     * @param value
-     *            PostgreSQL JDBC driver domain type representing position in the write-ahead log stream
+     * @param value PostgreSQL JDBC driver domain type representing position in the write-ahead log stream
      * @return not null LSN instance
      */
     public static Lsn valueOf(LogSequenceNumber value) {
@@ -61,12 +58,11 @@ public class Lsn implements Comparable<Lsn> {
     /**
      * Create LSN instance by string represent LSN.
      *
-     * @param strValue
-     *            not null string as two hexadecimal numbers of up to 8 digits
-     *            each, separated by a slash. For example {@code 16/3002D50},
-     *            {@code 0/15D68C50}
+     * @param strValue not null string as two hexadecimal numbers of up to 8 digits
+     *                 each, separated by a slash. For example {@code 16/3002D50},
+     *                 {@code 0/15D68C50}
      * @return not null LSN instance where if specified string represent have
-     *         not valid form {@link Lsn#INVALID_LSN}
+     * not valid form {@link Lsn#INVALID_LSN}
      */
     public static Lsn valueOf(String strValue) {
         final int slashIndex = strValue.lastIndexOf('/');
@@ -76,9 +72,9 @@ public class Lsn implements Comparable<Lsn> {
         }
 
         final String logicalXLogStr = strValue.substring(0, slashIndex);
-        final int logicalXlog = (int) Long.parseLong(logicalXLogStr, 16);
+        final int logicalXlog = (int)Long.parseLong(logicalXLogStr, 16);
         final String segmentStr = strValue.substring(slashIndex + 1, strValue.length());
-        final int segment = (int) Long.parseLong(segmentStr, 16);
+        final int segment = (int)Long.parseLong(segmentStr, 16);
 
         final ByteBuffer buf = ByteBuffer.allocate(8);
         buf.putInt(logicalXlog);
@@ -105,8 +101,8 @@ public class Lsn implements Comparable<Lsn> {
 
     /**
      * @return String represent position in the write-ahead log stream as two
-     *         hexadecimal numbers of up to 8 digits each, separated by a slash.
-     *         For example {@code 16/3002D50}, {@code 0/15D68C50}
+     * hexadecimal numbers of up to 8 digits each, separated by a slash.
+     * For example {@code 16/3002D50}, {@code 0/15D68C50}
      */
     public String asString() {
         final ByteBuffer buf = ByteBuffer.allocate(8);
@@ -127,7 +123,7 @@ public class Lsn implements Comparable<Lsn> {
             return false;
         }
 
-        final Lsn that = (Lsn) o;
+        final Lsn that = (Lsn)o;
 
         return value == that.value;
 
@@ -135,7 +131,7 @@ public class Lsn implements Comparable<Lsn> {
 
     @Override
     public int hashCode() {
-        return (int) (value ^ (value >>> 32));
+        return (int)(value ^ (value >>> 32));
     }
 
     public boolean isValid() {
@@ -145,6 +141,10 @@ public class Lsn implements Comparable<Lsn> {
     @Override
     public String toString() {
         return "LSN{" + asString() + '}';
+    }
+
+    public long getValue() {
+        return value;
     }
 
     @Override
