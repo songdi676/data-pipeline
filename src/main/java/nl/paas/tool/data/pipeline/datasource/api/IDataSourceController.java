@@ -8,6 +8,7 @@ import com.github.jinahya.database.metadata.bind.Table;
 
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationStat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,9 +49,13 @@ public interface IDataSourceController {
     Object deleteDataSource(@PathVariable("name") String name);
 
     @GetMapping(value = "{name}/{schema}/table/list")
-    HashSet<Table> getTableInfoList(@PathVariable("name") String name,@PathVariable("schema") String schema) throws SQLException;
+    HashSet<Table> getTableInfoList(@PathVariable("name") String name, @PathVariable("schema") String schema)
+        throws SQLException;
 
     @GetMapping(value = "{name}/slot/list")
     List<ReplicationSlot> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;
+
+    @GetMapping(value = "{name}/replication-stat/list")
+    List<ReplicationStat> fetchStatReplicationInfo(String name);
 
 }

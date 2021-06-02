@@ -11,6 +11,7 @@ import java.util.Optional;
 import javax.sql.DataSource;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.jinahya.database.metadata.bind.Context;
 import com.github.jinahya.database.metadata.bind.Schema;
 import com.github.jinahya.database.metadata.bind.Table;
@@ -22,9 +23,11 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import nl.paas.tool.data.pipeline.config.PipelineConfig;
 import nl.paas.tool.data.pipeline.datasource.api.IDataSourceController;
+import nl.paas.tool.data.pipeline.datasource.mapper.ReplicationStatMapper;
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.Lsn;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationStat;
 import nl.paas.tool.data.pipeline.utils.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,6 +42,8 @@ public class DataSourceController implements IDataSourceController {
     private DataSource dataSource;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private ReplicationStatMapper replicationStatMapper;
 
     @Override
     public List<DataSourceVo> getDatasource() {
@@ -96,13 +101,8 @@ public class DataSourceController implements IDataSourceController {
 
     public DataSourceVo getDataSource(String name) {
         DataSourceVo exist;
-        try (final KubernetesClient client = new DefaultKubernetesClient()) {
-            Resource<ConfigMap> configMapResource = client.configMaps().inNamespace(pipelineConfig.getNamespace())
-                .withName(pipelineConfig.getConfigMapName());
-            List<DataSourceVo> oldList = getDatasource();
-            exist = oldList.stream().filter(d -> d.getName().equals(name)).findAny().get();
-
-        }
+        List<DataSourceVo> oldList = getDatasource();
+        exist = oldList.stream().filter(d -> d.getName().equals(name)).findAny().get();
         return exist;
     }
 
@@ -117,27 +117,47 @@ public class DataSourceController implements IDataSourceController {
         return tables;
     }
 
+    @DS("#name")
+    @Override
+    public List<ReplicationStat> fetchStatReplicationInfo(String name) {
+        List<ReplicationStat> result = replicationStatMapper.selectList(Wrappers.emptyWrapper());
+        result.forEach(r -> {
+            Lsn lsn = Lsn.valueOf(r.getFlushLsn());
+            r.setFlushLsnValue(lsn.getValue());
+            Lsn replayLsn = Lsn.valueOf(r.getReplayLsn());
+            r.setReplayLsnValue(replayLsn.getValue());
+            Lsn sentLsn = Lsn.valueOf(r.getSentLsn());
+            r.setSentLsnValue(sentLsn.getValue());
+            Lsn writeLsn = Lsn.valueOf(r.getWriteLsn());
+            r.setWriteLsnValue(writeLsn.getValue());
+        });
+        return result;
+    }
+
     @Override
     @DS("#name")
     public List<ReplicationSlot> fetchAllReplicationSlotInfo(String name) {
-        List<ReplicationSlot> ss = jdbcTemplate.query("select *,A.current_wal_lsn from pg_replication_slots,pg_current_wal_lsn() AS A(current_wal_lsn)", (rs, var2) -> {
+        List<ReplicationSlot> result = jdbcTemplate
+            .query("select *,A.current_wal_lsn from pg_replication_slots,pg_current_wal_lsn() AS A(current_wal_lsn)",
+                (rs, var2) -> {
 
-            boolean active = rs.getBoolean("active");
-            String slotName = rs.getString("slot_name");
-            String slotType = rs.getString("slot_type");
-            String pluginName = rs.getString("plugin");
-            final Long xmin = rs.getLong("catalog_xmin");
-            Lsn currentWalLsn = tryParseLsn(slotName, pluginName, name, rs, "current_wal_lsn");
-            Lsn restartLsn = tryParseLsn(slotName, pluginName, name, rs, "restart_lsn");
-            Lsn confirmedFlushedLsn = tryParseLsn(slotName, pluginName, name, rs, "confirmed_flush_lsn");
-            ReplicationSlot replicationSlot = new ReplicationSlot(active, confirmedFlushedLsn, restartLsn, xmin);
-            replicationSlot.setSlotName(slotName);
-            replicationSlot.setSlotType(slotType);
-            replicationSlot.setCurrentWalLsn(currentWalLsn);
-            return replicationSlot;
+                    boolean active = rs.getBoolean("active");
+                    String slotName = rs.getString("slot_name");
+                    String slotType = rs.getString("slot_type");
+                    String pluginName = rs.getString("plugin");
+                    final Long xmin = rs.getLong("catalog_xmin");
+                    Lsn currentWalLsn = tryParseLsn(slotName, pluginName, name, rs, "current_wal_lsn");
+                    Lsn restartLsn = tryParseLsn(slotName, pluginName, name, rs, "restart_lsn");
+                    Lsn confirmedFlushedLsn = tryParseLsn(slotName, pluginName, name, rs, "confirmed_flush_lsn");
+                    ReplicationSlot replicationSlot =
+                        new ReplicationSlot(active, confirmedFlushedLsn, restartLsn, xmin);
+                    replicationSlot.setSlotName(slotName);
+                    replicationSlot.setSlotType(slotType);
+                    replicationSlot.setCurrentWalLsn(currentWalLsn);
+                    return replicationSlot;
 
-        });
-        return ss;
+                });
+        return result;
     }
 
     private Lsn tryParseLsn(String slotName, String pluginName, String database, ResultSet rs, String column)
