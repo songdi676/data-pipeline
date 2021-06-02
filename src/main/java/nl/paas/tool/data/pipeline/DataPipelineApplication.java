@@ -9,7 +9,7 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 @SpringBootApplication
 @EnableFeignClients
 @EnableOpenApi
-@MapperScan(basePackages = "nl.paas.tool.data.pipeline")
+@MapperScan("nl.paas.tool.data.pipeline.*.mapper")
 public class DataPipelineApplication {
 
     public static void main(String[] args) {
