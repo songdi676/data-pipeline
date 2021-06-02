@@ -47,8 +47,8 @@ public interface IDataSourceController {
     @DeleteMapping(value = "{name}")
     Object deleteDataSource(@PathVariable("name") String name);
 
-    @GetMapping(value = "{name}/table/list")
-    HashSet<Table> getTableInfoList(@PathVariable("name") String name) throws SQLException;
+    @GetMapping(value = "{name}/{schema}/table/list")
+    HashSet<Table> getTableInfoList(@PathVariable("name") String name,@PathVariable("schema") String schema) throws SQLException;
 
     @GetMapping(value = "{name}/slot/list")
     List<Map<String, Object>> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;

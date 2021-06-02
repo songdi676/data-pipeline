@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.github.jinahya.database.metadata.bind.Context;
+import com.github.jinahya.database.metadata.bind.Schema;
 import com.github.jinahya.database.metadata.bind.Table;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -105,10 +106,12 @@ public class DataSourceController implements IDataSourceController {
 
     @Override
     @DS("#name")
-    public HashSet<Table> getTableInfoList(String name) throws SQLException {
+    public HashSet<Table> getTableInfoList(String name, String schemaName) throws SQLException {
         Context context =
             Context.newInstance(dataSource.getConnection()).suppress(SQLFeatureNotSupportedException.class);
-        HashSet<Table> tables = context.getTables(null, null, null, new HashSet<>());
+        Schema schema = new Schema();
+        schema.setTableCatalog(schemaName);
+        HashSet<Table> tables = context.getTables(schema, null, null, new HashSet<>());
         return tables;
     }
 
