@@ -1,12 +1,13 @@
 package nl.paas.tool.data.pipeline.datasource.api;
 
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
-import com.baomidou.mybatisplus.generator.config.po.TableInfo;
+import com.github.jinahya.database.metadata.bind.Table;
 
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
-import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,9 +48,9 @@ public interface IDataSourceController {
     Object deleteDataSource(@PathVariable("name") String name);
 
     @GetMapping(value = "{name}/table/list")
-    List<TableInfo> getTableInfoList(@PathVariable("name") String name);
+    HashSet<Table> getTableInfoList(@PathVariable("name") String name) throws SQLException;
 
     @GetMapping(value = "{name}/slot/list")
-    List<ReplicationSlot> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;
+    List<Map<String, Object>> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;
 
 }

@@ -1,9 +1,5 @@
 package nl.paas.tool.data.pipeline.datasource.model.postgresql;
 
-import io.debezium.connector.postgresql.connection.Lsn;
-import io.debezium.connector.postgresql.connection.ServerInfo;
-import io.debezium.connector.postgresql.spi.SlotState;
-
 public class ReplicationSlot {
     public static final ReplicationSlot INVALID = new ReplicationSlot(false, null, null, null);
 

@@ -1,11 +1,18 @@
 package nl.paas.tool.data.pipeline.datasource.controller;
 
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.generator.config.po.TableInfo;
+import javax.sql.DataSource;
+
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.github.jinahya.database.metadata.bind.Context;
+import com.github.jinahya.database.metadata.bind.Table;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -14,11 +21,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import nl.paas.tool.data.pipeline.config.PipelineConfig;
 import nl.paas.tool.data.pipeline.datasource.api.IDataSourceController;
-import nl.paas.tool.data.pipeline.datasource.engines.PostgreSqlEngine;
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
-import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import nl.paas.tool.data.pipeline.utils.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,6 +32,10 @@ public class DataSourceController implements IDataSourceController {
     @Autowired
     private PipelineConfig pipelineConfig;
     private static final String CONFIG_KEY = "DataSource";
+    @Autowired
+    private DataSource dataSource;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     public List<DataSourceVo> getDatasource() {
@@ -94,16 +104,18 @@ public class DataSourceController implements IDataSourceController {
     }
 
     @Override
-    public List<TableInfo> getTableInfoList(String name) {
-        DataSourceVo dataSourceVo = getDataSource(name);
-        PostgreSqlEngine postgreSqlEngine = new PostgreSqlEngine(dataSourceVo);
-        return postgreSqlEngine.getTableInfoList();
+    @DS("#name")
+    public HashSet<Table> getTableInfoList(String name) throws SQLException {
+        Context context =
+            Context.newInstance(dataSource.getConnection()).suppress(SQLFeatureNotSupportedException.class);
+        HashSet<Table> tables = context.getTables(null, null, null, new HashSet<>());
+        return tables;
     }
 
     @Override
-    public List<ReplicationSlot> fetchAllReplicationSlotInfo(String name) throws SQLException {
-        DataSourceVo dataSourceVo = getDataSource(name);
-        PostgreSqlEngine postgreSqlEngine = new PostgreSqlEngine(dataSourceVo);
-        return postgreSqlEngine.fetchAllReplicationSlotInfo();
+    @DS("#name")
+    public List<Map<String, Object>> fetchAllReplicationSlotInfo(String name) {
+        List<Map<String, Object>> ss = jdbcTemplate.queryForList("select * from pg_replication_slots");
+        return ss;
     }
 }
