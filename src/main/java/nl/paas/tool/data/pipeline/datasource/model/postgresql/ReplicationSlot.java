@@ -3,6 +3,8 @@ package nl.paas.tool.data.pipeline.datasource.model.postgresql;
 public class ReplicationSlot {
     public static final ReplicationSlot INVALID = new ReplicationSlot(false, null, null, null);
 
+    private String slotName;
+    private String slotType;
     private boolean active;
     private Lsn latestFlushedLsn;
     private Lsn restartLsn;
@@ -13,6 +15,9 @@ public class ReplicationSlot {
         this.latestFlushedLsn = latestFlushedLsn;
         this.restartLsn = restartLsn;
         this.catalogXmin = catalogXmin;
+    }
+
+    public ReplicationSlot() {
     }
 
     protected boolean active() {
@@ -55,6 +60,54 @@ public class ReplicationSlot {
 
     protected SlotState asSlotState() {
         return new SlotState(latestFlushedLsn, restartLsn, catalogXmin, active);
+    }
+
+    public String getSlotType() {
+        return slotType;
+    }
+
+    public void setSlotType(String slotType) {
+        this.slotType = slotType;
+    }
+
+    public String getSlotName() {
+        return slotName;
+    }
+
+    public void setSlotName(String slotName) {
+        this.slotName = slotName;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Lsn getLatestFlushedLsn() {
+        return latestFlushedLsn;
+    }
+
+    public void setLatestFlushedLsn(Lsn latestFlushedLsn) {
+        this.latestFlushedLsn = latestFlushedLsn;
+    }
+
+    public Lsn getRestartLsn() {
+        return restartLsn;
+    }
+
+    public void setRestartLsn(Lsn restartLsn) {
+        this.restartLsn = restartLsn;
+    }
+
+    public Long getCatalogXmin() {
+        return catalogXmin;
+    }
+
+    public void setCatalogXmin(Long catalogXmin) {
+        this.catalogXmin = catalogXmin;
     }
 
     @Override

@@ -1,11 +1,11 @@
 package nl.paas.tool.data.pipeline.datasource.controller;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.sql.DataSource;
@@ -23,6 +23,8 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import nl.paas.tool.data.pipeline.config.PipelineConfig;
 import nl.paas.tool.data.pipeline.datasource.api.IDataSourceController;
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.Lsn;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import nl.paas.tool.data.pipeline.utils.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -117,8 +119,44 @@ public class DataSourceController implements IDataSourceController {
 
     @Override
     @DS("#name")
-    public List<Map<String, Object>> fetchAllReplicationSlotInfo(String name) {
-        List<Map<String, Object>> ss = jdbcTemplate.queryForList("select * from pg_replication_slots");
+    public List<ReplicationSlot> fetchAllReplicationSlotInfo(String name) {
+        List<ReplicationSlot> ss = jdbcTemplate.query("select * from pg_replication_slots", (rs, var2) -> {
+
+            boolean active = rs.getBoolean("active");
+            String slotName = rs.getString("slot_name");
+            String slotType = rs.getString("slot_type");
+            String pluginName = rs.getString("plugin");
+            final Long xmin = rs.getLong("catalog_xmin");
+            Lsn restartLsn = tryParseLsn(slotName, pluginName, name, rs, "restart_lsn");
+            Lsn confirmedFlushedLsn = tryParseLsn(slotName, pluginName, name, rs, "confirmed_flush_lsn");
+            ReplicationSlot replicationSlot = new ReplicationSlot(active, confirmedFlushedLsn, restartLsn, xmin);
+            replicationSlot.setSlotName(slotName);
+            replicationSlot.setSlotType(slotType);
+            return replicationSlot;
+
+        });
         return ss;
+    }
+
+    private Lsn tryParseLsn(String slotName, String pluginName, String database, ResultSet rs, String column)
+        throws SQLException {
+        Lsn lsn = null;
+
+        String lsnStr = rs.getString(column);
+        if (lsnStr == null) {
+            return null;
+        }
+        try {
+            lsn = Lsn.valueOf(lsnStr);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Value " + column + " in the pg_replication_slots table for slot = '" + slotName + "', plugin = '"
+                    + pluginName + "', database = '" + database
+                    + "' is not valid. This is an abnormal situation and the database status should be checked.");
+        }
+        if (!lsn.isValid()) {
+            throw new RuntimeException("Invalid LSN returned from database");
+        }
+        return lsn;
     }
 }

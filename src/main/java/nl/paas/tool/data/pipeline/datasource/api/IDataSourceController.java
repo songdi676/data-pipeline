@@ -3,11 +3,11 @@ package nl.paas.tool.data.pipeline.datasource.api;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import com.github.jinahya.database.metadata.bind.Table;
 
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
+import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,6 +51,6 @@ public interface IDataSourceController {
     HashSet<Table> getTableInfoList(@PathVariable("name") String name,@PathVariable("schema") String schema) throws SQLException;
 
     @GetMapping(value = "{name}/slot/list")
-    List<Map<String, Object>> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;
+    List<ReplicationSlot> fetchAllReplicationSlotInfo(@PathVariable("name") String name) throws SQLException;
 
 }
