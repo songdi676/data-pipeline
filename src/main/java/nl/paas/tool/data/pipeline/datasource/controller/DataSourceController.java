@@ -6,7 +6,9 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -24,7 +26,9 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import nl.paas.tool.data.pipeline.config.PipelineConfig;
 import nl.paas.tool.data.pipeline.datasource.api.IDataSourceController;
 import nl.paas.tool.data.pipeline.datasource.mapper.ReplicationStatMapper;
+import nl.paas.tool.data.pipeline.datasource.mapper.TableInfoMapper;
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
+import nl.paas.tool.data.pipeline.datasource.model.TableInfoVo;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.Lsn;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationStat;
@@ -44,6 +48,8 @@ public class DataSourceController implements IDataSourceController {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private ReplicationStatMapper replicationStatMapper;
+    @Autowired
+    private TableInfoMapper tableInfoMapper;
 
     @Override
     public List<DataSourceVo> getDatasource() {
@@ -108,13 +114,20 @@ public class DataSourceController implements IDataSourceController {
 
     @Override
     @DS("#name")
-    public HashSet<Table> getTableInfoList(String name, String schemaName) throws SQLException {
+    public List<TableInfoVo> getTableInfoList(String name, String schemaName) throws SQLException {
         Context context =
             Context.newInstance(dataSource.getConnection()).suppress(SQLFeatureNotSupportedException.class);
         Schema schema = new Schema();
         schema.setTableCatalog(schemaName);
-        HashSet<Table> tables = context.getTables(schema, null, null, new HashSet<>());
-        return tables;
+        HashSet<Table> tables = context.getTables(schema, null, new String[] {"TABLE"}, new HashSet<>());
+        Map<String, Table> tablesMap = tables.stream().collect(Collectors.toMap(Table::getTableName, t -> t));
+        List<TableInfoVo> tablesCount = tableInfoMapper.getAllTableCount(Wrappers.emptyWrapper());
+        tablesCount.forEach(t -> {
+            Table tableMate = tablesMap.get(t.getTableName());
+            t.setRemarks(tableMate.getRemarks());
+            t.setTableType(tableMate.getTableType());
+        });
+        return tablesCount;
     }
 
     @DS("#name")

@@ -1,12 +1,10 @@
 package nl.paas.tool.data.pipeline.datasource.api;
 
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.List;
 
-import com.github.jinahya.database.metadata.bind.Table;
-
 import nl.paas.tool.data.pipeline.datasource.model.DataSourceVo;
+import nl.paas.tool.data.pipeline.datasource.model.TableInfoVo;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationSlot;
 import nl.paas.tool.data.pipeline.datasource.model.postgresql.ReplicationStat;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -49,7 +47,7 @@ public interface IDataSourceController {
     Object deleteDataSource(@PathVariable("name") String name);
 
     @GetMapping(value = "{name}/{schema}/table/list")
-    HashSet<Table> getTableInfoList(@PathVariable("name") String name, @PathVariable("schema") String schema)
+    List<TableInfoVo> getTableInfoList(@PathVariable("name") String name, @PathVariable("schema") String schema)
         throws SQLException;
 
     @GetMapping(value = "{name}/slot/list")

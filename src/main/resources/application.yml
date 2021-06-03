@@ -10,6 +10,10 @@ spring:
           url: jdbc:postgresql://10.1.12.150:31432/paasdev
           username: paas
           password: Paas1234
+        oracle-20:
+          url: jdbc:oracle:thin:@10.1.8.15:1521:oracle12c
+          username: paas2
+          password: U%HYKs#n_3
 pipeline:
   image: ${CONNECT_IMAGE:harbor.paas.nl:5000/paas_platform/debezium/connect:1.4.2.Final}
   namespace: ${CONNECT_NAME_SPACES:data-pipeline}
