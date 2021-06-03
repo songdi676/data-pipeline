@@ -18,3 +18,6 @@ pipeline:
   image: ${CONNECT_IMAGE:harbor.paas.nl:5000/paas_platform/debezium/connect:1.4.2.Final}
   namespace: ${CONNECT_NAME_SPACES:data-pipeline}
   configMapName: ${CONFIGMAP_NAME:data-pipeline-config}
+logging:
+  level:
+    nl.paas.tool.data.pipeline.datasource.mapper: DEBUG
