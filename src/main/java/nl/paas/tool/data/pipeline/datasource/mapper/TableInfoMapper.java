@@ -14,6 +14,6 @@ public interface TableInfoMapper extends BaseMapper<TableInfoVo> {
 
     @Select.List({
         @Select(value = "select t.table_name,t.num_rows from user_tables t  order by TABLE_NAME asc ", databaseId = "oracle"),
-        @Select(value = "select relname as table_name, reltuples as num_rows from pg_class where relkind = 'r' order by TABLE_NAME asc;", databaseId = "postgresql")})
+        @Select(value = "select relname as table_name, reltuples as num_rows from pg_class where relkind = 'r' order by TABLE_NAME asc", databaseId = "postgresql")})
     List<TableInfoVo> getAllTableCount(@Param(Constants.WRAPPER) Wrapper wrapper);
 }
