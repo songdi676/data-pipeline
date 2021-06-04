@@ -12,7 +12,7 @@ public class TableInfoProvider extends SqlProvider {
 
     static {
         SQL_MAP.put("postgresql", new SQL() {{
-            SELECT("relname as table_name", "reltuples as num_rows", "obj_description(relfilenode, 'pg_class')");
+            SELECT("relname as table_name", "reltuples as num_rows", "obj_description(relfilenode, 'pg_class') as remarks");
             FROM("pg_class");
             WHERE("relkind = 'r'");
             ORDER_BY("TABLE_NAME asc");
