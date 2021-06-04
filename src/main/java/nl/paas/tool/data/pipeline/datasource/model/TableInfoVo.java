@@ -9,7 +9,8 @@ public class TableInfoVo {
     private String tableType;
     @TableField(exist = false)
     private String remarks;
-
+    @TableField(exist = false)
+    private String schema;
 
     public String getTableName() {
         return tableName;
@@ -41,5 +42,13 @@ public class TableInfoVo {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 }

@@ -2,21 +2,14 @@ package nl.paas.tool.data.pipeline.datasource.controller;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.jinahya.database.metadata.bind.Context;
-import com.github.jinahya.database.metadata.bind.Schema;
-import com.github.jinahya.database.metadata.bind.Table;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -115,18 +108,9 @@ public class DataSourceController implements IDataSourceController {
     @Override
     @DS("#name")
     public List<TableInfoVo> getTableInfoList(String name, String schemaName) throws SQLException {
-        Context context =
-            Context.newInstance(dataSource.getConnection()).suppress(SQLFeatureNotSupportedException.class);
-        Schema schema = new Schema();
-        schema.setTableCatalog(schemaName);
-        HashSet<Table> tables = context.getTables(schema, null, new String[] {"TABLE"}, new HashSet<>());
-        Map<String, Table> tablesMap = tables.stream().collect(Collectors.toMap(Table::getTableName, t -> t));
-        List<TableInfoVo> tablesCount = tableInfoMapper.getAllTableCount(Wrappers.emptyWrapper());
-        tablesCount.forEach(t -> {
-            Table tableMate = tablesMap.get(t.getTableName());
-            t.setRemarks(tableMate.getRemarks());
-            t.setTableType(tableMate.getTableType());
-        });
+
+        List<TableInfoVo> tablesCount = tableInfoMapper.getAllTableCount();
+
         return tablesCount;
     }
 
