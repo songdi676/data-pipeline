@@ -17,7 +17,7 @@ spring:
           username: paas2
           password: U%HYKs#n_3
 pipeline:
-  image: ${CONNECT_IMAGE:harbor.paas.nl:5000/paas_platform/debezium/connect:1.4.2.Final}
+  image: ${CONNECT_IMAGE:10.1.8.15:5000/paas_platform/debezium/connect:1.4.2.Final}
   namespace: ${CONNECT_NAME_SPACES:data-pipeline}
   configMapName: ${CONFIGMAP_NAME:data-pipeline-config}
 logging:
